@@ -9,73 +9,118 @@ int timeperiod = 150;
 
 class CGame{
 
+	list<CTank> m_Enimies;
+	list<CBullet> m_BulletsEnemy;
+	list<CBullet> m_BulletsPlayer;
+	int map[N/STEP][N/STEP];
+	
+	void checkOutOfBound(list<CBullet> * bulletPtr){
+		list<CBullet>::iterator itB = bulletPtr->begin();
+		while(itB!= bulletPtr->end()){
+			if(itB->IsOutOfBound()){
+				itB->m_ptank->bulletHit();	
+				bulletPtr->erase(itB++);
+			}
+			else
+				itB++;
+		}
+	}
+
 public:
 	CTank m_Player;	
-	list<CTank> m_Enimies;
 
-	CGame():m_Player(3,N/2,N/2){
-		CTank enemy1(3,N/3,N/3);
-		CTank enemy2(3,N/2,5);
+	CGame():m_Player(3,N/2,N/2,&m_BulletsPlayer,UP){
+		CTank enemy1(3,N/3,30,&m_BulletsEnemy);
+		CTank enemy2(3,N/2,30,&m_BulletsEnemy);
 		m_Enimies.push_back(enemy1);
 		m_Enimies.push_back(enemy2);
+		memset(map,0,sizeof(map));
+		
 	}
 	
+	
 	void printGL(){
+		
+		list<CTank>::iterator itT;
+		list<CBullet>::iterator itB;
+		
 		m_Player.printGL();	
 
 		//Print enimies
-		list<CTank>::iterator eme;
-		for(eme = m_Enimies.begin(); eme!= m_Enimies.end(); eme++){
-			eme->printGL();
+		for(itT=m_Enimies.begin(); itT!=m_Enimies.end(); itT++){
+			itT->printGL();
 		}
 
 		//Print Bullets
-		list<CBullet> *bullet = &m_Player.m_bullets;
-		list<CBullet>::iterator it;
-		for(it = bullet->begin(); it != bullet->end(); it++){
-			it->printGL();
-		}
-
+		for(itB=m_BulletsEnemy.begin();itB!=m_BulletsEnemy.end(); itB++)
+			itB->printGL();		
+		
+		for(itB=m_BulletsPlayer.begin();itB!=m_BulletsPlayer.end(); itB++)
+			itB->printGL();		
+		
+	
 	}
 
 	void timestep(){
 
-		//Move All bullets a step
-		list<CBullet> *bullet = &m_Player.m_bullets;
-		list<CBullet>::iterator it;
-		for(it = bullet->begin(); it != bullet->end(); it++){
-			it->propogate();
-		}
+		list<CTank>::iterator itT;
+		list<CBullet>::iterator itB;
 
-		//Check for collision and out of bound
-		it = bullet->begin();
-		while(it!= bullet->end()){
-			if(it->IsOutOfBound()){
-				bullet->erase(it++)	;
-			}
-			else
-				it++;
-		}
+		//Move All bullets a step
+		for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++)
+			itB->propogate();
+
+		for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++)
+				itB->propogate();
 		
-		//check for collision
-		it = bullet->begin();
-		list<CTank>::iterator eme;
+		//Check for out of bound	
+		checkOutOfBound(&m_BulletsEnemy);
+		checkOutOfBound(&m_BulletsPlayer);
+		
+		//check for collision player bullet -> enemy
+		itB = m_BulletsPlayer.begin();
 		bool bHit = false;
-		while(it!= bullet->end()){
-			eme = m_Enimies.begin();
-			while(eme != m_Enimies.end()){
+		while(itB!= m_BulletsPlayer.end()){
+			itT= m_Enimies.begin();
+			while(itT!= m_Enimies.end()){
 				bHit = false;	
-				if(eme->hit(it->m_nX, it->m_nY)){
-					cout<<"HIT"<<endl;
+				if(itT->hit(itB->m_nX, itB->m_nY)){
+					itB->m_ptank->bulletHit();	
+					cout<<"---HIT---"<<endl;
 					bHit = true;
-					bullet->erase(it++)	;
-					m_Enimies.erase(eme++)	;
+					m_BulletsPlayer.erase(itB++)	;
+					m_Enimies.erase(itT++)	;
 					break;
 				}
-				eme++;
+				itT++;
 			}
-			if(!bHit) it++;
+			if(!bHit) itB++;
 		}
+
+		//check for collision enemy bullet -> player 
+		itB = m_BulletsEnemy.begin();
+		bHit = false;
+		while(itB!= m_BulletsEnemy.end()){
+			if(m_Player.hit(itB->m_nX, itB->m_nY)){
+					cout<<"HIT"<<endl;
+					itB->m_ptank->bulletHit();
+					m_BulletsEnemy.erase(itB++)	;
+					--m_Player.m_nHealth;
+					if(!m_Player.m_nHealth){
+						bHit = true;
+						cout<<"GAME OVER"<<endl;	
+						break;
+					}
+			}
+			itB++;
+		}	
+
+	
+		//Enemy fires after each
+		for(itT= m_Enimies.begin(); itT!= m_Enimies.end(); itT++){
+			itT->fire();
+		}
+
 	}
 
 };

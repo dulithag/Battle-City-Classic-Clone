@@ -1,8 +1,11 @@
 #include "tank.h"
+#include "bullet.h"
 
-CTank::CTank(unsigned int nHealth,unsigned int nX, unsigned int nY):
+CTank::CTank(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBullet> *Bullets, Direction direction):
 	m_nHealth(nHealth),m_nX(nX),m_nY(nY){
-		m_FacingDirection = UP;	
+		m_FacingDirection = direction;
+		m_bullets = Bullets;	
+		m_bFired = false;
 }
 
 void CTank::set(unsigned int nHealth,unsigned int nX, unsigned int nY){
@@ -31,8 +34,15 @@ void CTank::move(Direction direction){
 }
 
 void CTank::fire(){
-	CBullet temp(m_nX,m_nY,m_FacingDirection);
-	m_bullets.push_back(temp);
+		if(!m_bFired){
+			CBullet temp(m_nX,m_nY,m_FacingDirection,this);
+			m_bullets->push_back(temp);
+			m_bFired = true;	
+		}
+}
+
+void CTank::bulletHit(){
+		m_bFired = false;
 }
 
 void CTank::printGL(){

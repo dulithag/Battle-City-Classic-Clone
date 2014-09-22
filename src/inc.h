@@ -6,6 +6,7 @@
 #include <GL/glut.h>
 #include <stdlib.h>
 #include <list>
+#include <string.h>
 
 #ifndef _INC
 #define _INC

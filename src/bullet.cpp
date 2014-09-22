@@ -1,9 +1,11 @@
 #include "bullet.h"
 
 
-CBullet::CBullet(unsigned int nX, unsigned int nY, Direction dir ):
-					m_nX(nX),m_nY(nY),m_travelingDirection(dir){
-	bDelete = false;
+CBullet::CBullet(unsigned int nX, unsigned int nY, Direction dir, CTank* t){
+	m_nX = nX;
+	m_nY = nY;
+	m_travelingDirection = dir;
+	m_ptank = t;	
 }
 
 	
@@ -18,7 +20,7 @@ void CBullet::propogate(){
 }	
 
 bool CBullet::IsOutOfBound(){
-		return m_nY<50 || m_nY>N || m_nX<0 || m_nX>N;
+		return m_nY<0 || m_nY>N || m_nX<0 || m_nX>N;
 }
 
 void CBullet::printGL(){
