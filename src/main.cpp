@@ -84,11 +84,13 @@ public:
 
 		//m_Textures = new GLuint[NUMTEXTURES];
 
-		m_Player.set(3,N/2,N/2,&m_BulletsPlayer,&m_Textures[0],UP);
+		m_Player.set(3,100,140,&m_BulletsPlayer,&m_Textures[0],UP);
 		CTank enemy1(3,N/3,30,&m_BulletsEnemy,&m_Textures[1]);
 		CTank enemy2(3,N/2,30,&m_BulletsEnemy,&m_Textures[1]);
+		CTank enemy3(3,30,30,&m_BulletsEnemy,&m_Textures[1]);
 		m_Enimies.push_back(enemy1);
 		m_Enimies.push_back(enemy2);
+		m_Enimies.push_back(enemy3);
 		memset(map,0,sizeof(map));
 	}
 
@@ -134,10 +136,7 @@ public:
 		list<CTank>::iterator itT;
 		list<CBullet>::iterator itB;
 		
-		cout<<"--HERE--"<<endl;
 		m_Player.printGL();	
-		cout<<"--HERE--"<<endl;
-
 		//Print enimies
 		for(itT=m_Enimies.begin(); itT!=m_Enimies.end(); itT++){
 			itT->printGL();
@@ -244,7 +243,8 @@ void init(){
 	glutInitWindowSize(N,N);
 	glutInitWindowPosition(0,0);
 	glutCreateWindow("Tank");
-	glClearColor(0.0f,0.0f,0.0f,0.0f);
+	//glClearColor(0.0f,0.0f,0.0f,0.0f);
+	glClearColor(0.5f,0.5f,0.5f,0.0f);
 	thegame.initGL();
 }
 
@@ -253,19 +253,19 @@ void keyboard(unsigned char k, int x, int y){
 
 	switch(k){
 		case 'w':
-			cout<<"up"<<endl;
+			//cout<<"up"<<endl;
 			thegame.m_Player.move(UP);
 			break;
 		case 's':
-			cout<<"down"<<endl;
+			//cout<<"down"<<endl;
 			thegame.m_Player.move(DOWN);
 			break;
 		case 'd':
-			cout<<"right"<<endl;
+			//cout<<"right"<<endl;
 			thegame.m_Player.move(RIGHT);
 			break;
 		case 'a':
-			cout<<"left"<<endl;
+			//cout<<"left"<<endl;
 			thegame.m_Player.move(LEFT);
 			break;
 		case 'q':
@@ -283,7 +283,7 @@ void keyboard(unsigned char k, int x, int y){
 }
 
 void reshape(int w, int h){
-	cout<<"GL redisplay function <--"<<endl;
+	//cout<<"GL redisplay function <--"<<endl;
 	glViewport(0,0,(GLsizei)w,(GLsizei)h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -291,9 +291,9 @@ void reshape(int w, int h){
 }
 
 void display(){
+	//cout<<"display function <--"<<endl;
  	glClear(GL_COLOR_BUFFER_BIT);
 	glEnable(GL_TEXTURE_2D);
-	cout<<"display function <--"<<endl;
 	thegame.printGL();
 
 /*
@@ -311,7 +311,7 @@ void display(){
 }
 
 void timerfunc(int t){
-	cout<<"timer"<<endl;
+	//cout<<"timer"<<endl;
 	thegame.timestep();
 
 	glutPostRedisplay();

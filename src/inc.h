@@ -12,8 +12,9 @@
 
 #ifndef _INC
 #define _INC
-#define N 512 
+#define N 500 
 #define PIXSIZE 30.0f
+#define TANKSIZE 30
 #define STEP 5
 #define UNIT 16
 #define NUMTEXTURES 2

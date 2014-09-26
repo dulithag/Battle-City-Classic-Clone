@@ -10,6 +10,7 @@ class CBullet;
 class CTank{
 
 	bool m_bFired;
+	unsigned int m_nTankSize;
 	GLuint* m_Texture;
 
 public:
@@ -20,8 +21,7 @@ public:
 	unsigned int m_nX;
 	unsigned int m_nY;
 
-	CTank(){}
-
+	CTank();
 	CTank(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBullet> *bullet, 
 															GLuint *texture, Direction facing = DOWN);
 	void set(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBullet> *Bullets, 
