@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <list>
 #include <string.h>
+#include <fstream>
+#include <stdexcept>
 
 #ifndef _INC
 #define _INC

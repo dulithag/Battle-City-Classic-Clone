@@ -1,18 +1,69 @@
 #include "inc.h"
 #include "tank.h"
 #include "bullet.h"
+#include <stdint.h>
 
 using namespace std;
 
 int timeperiod = 150;
 
+//Image Dependent
+
+#define checkImageWidth 64
+#define checkImageHeight 64
+GLubyte checkImage[checkImageHeight][checkImageWidth][4];
 
 class CGame{
 
+	//
+	public:
+	GLuint m_PlayerTexture;
+	vector<unsigned char> m_PlayerPixels;
+	GLuint m_BotTexture;
+	vector<unsigned char> m_BotPixels;
+
+	private:
 	list<CTank> m_Enimies;
 	list<CBullet> m_BulletsEnemy;
 	list<CBullet> m_BulletsPlayer;
 	int map[N/STEP][N/STEP];
+
+	//Load a bitmap using function from stackoverflow
+	void LoadBitmap(vector<unsigned char> &Pixels, const char* FilePath){
+
+		fstream hFile(FilePath, std::ios::in | std::ios::binary);
+		if (!hFile.is_open()) throw invalid_argument("Error: File Not Found.");
+
+		hFile.seekg(0, std::ios::end);
+		int Length = hFile.tellg();
+		hFile.seekg(0, std::ios::beg);
+		std::vector<uint8_t> FileInfo(Length);
+		hFile.read(reinterpret_cast<char*>(FileInfo.data()), 54);
+
+		if(FileInfo[0] != 'B' && FileInfo[1] != 'M')
+		{
+			hFile.close();
+			throw invalid_argument("Error: Invalid File Format. Bitmap Required.");
+		}
+
+		if (FileInfo[28] != 24 && FileInfo[28] != 32)
+		{
+			hFile.close();
+			throw invalid_argument("Error: Invalid File Format. 24 or 32 bit Image Required.");
+		}
+
+		short BitsPerPixel = FileInfo[28];
+		int width = FileInfo[18] + (FileInfo[19] << 8);
+		int height = FileInfo[22] + (FileInfo[23] << 8);
+		uint32_t PixelsOffset = FileInfo[10] + (FileInfo[11] << 8);
+		uint32_t size = ((width * BitsPerPixel + 31) / 32) * 4 * height;
+		Pixels.resize(size);
+
+		hFile.seekg (PixelsOffset, std::ios::beg);
+		hFile.read(reinterpret_cast<char*>(Pixels.data()), size);
+		hFile.close();
+	}
+
 	
 	void checkOutOfBound(list<CBullet> * bulletPtr){
 		list<CBullet>::iterator itB = bulletPtr->begin();
@@ -29,15 +80,30 @@ class CGame{
 public:
 	CTank m_Player;	
 
-	CGame():m_Player(3,N/2,N/2,&m_BulletsPlayer,UP){
+	CGame():m_Player(3,N/2,N/2,&m_BulletsPlayer,UP,m_PlayerTexture){
+
 		CTank enemy1(3,N/3,30,&m_BulletsEnemy);
 		CTank enemy2(3,N/2,30,&m_BulletsEnemy);
 		m_Enimies.push_back(enemy1);
 		m_Enimies.push_back(enemy2);
 		memset(map,0,sizeof(map));
-		
 	}
-	
+
+	void initGL(){
+		//makeCheckImage();
+		LoadBitmap(m_PlayerPixels, "src/tank.bmp");
+
+		glGenTextures(1, &m_PlayerTexture);
+		glBindTexture(GL_TEXTURE_2D, m_PlayerTexture);
+
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 124, 124, 0, GL_RGBA, GL_UNSIGNED_BYTE,m_PlayerPixels.data());	
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageHeight , checkImageHeight , 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);	
+	}
 	
 	void printGL(){
 		
@@ -126,6 +192,23 @@ public:
 };
 CGame thegame;
 
+
+void makeCheckImage(void)
+{
+   int i, j, c;
+    
+   for (i = 0; i < checkImageHeight; i++) {
+      for (j = 0; j < checkImageWidth; j++) {
+         c = ((((i&0x8)==0)^((j&0x8))==0))*255;
+         checkImage[i][j][0] = (GLubyte) c;
+         checkImage[i][j][1] = (GLubyte) c;
+         checkImage[i][j][2] = (GLubyte) c;
+         checkImage[i][j][3] = (GLubyte) 255;
+      }
+   }
+}
+
+
 //____________________________________________________
 // OpenGL Shizzel
 //____________________________________________________
@@ -136,6 +219,7 @@ void init(){
 	glutInitWindowPosition(0,0);
 	glutCreateWindow("Tank");
 	glClearColor(0.5f,0.5f,0.5f,0.0f);
+	thegame.initGL();
 }
 
 void keyboard(unsigned char k, int x, int y){
@@ -182,9 +266,17 @@ void reshape(int w, int h){
 
 void display(){
  	glClear(GL_COLOR_BUFFER_BIT);
+	glEnable(GL_TEXTURE_2D);
 	cout<<"display function <--"<<endl;
 	//thegame.printBoard();
-	thegame.printGL();
+	//thegame.printGL();
+glBindTexture( GL_TEXTURE_2D, thegame.m_PlayerTexture);
+glBegin( GL_QUADS );
+glTexCoord2d(0,0); glVertex2d(0,0);
+glTexCoord2d(1,0); glVertex2d(64,0);
+glTexCoord2d(1,1); glVertex2d(64,64);
+glTexCoord2d(0,1); glVertex2d(0,64);
+glEnd();
 
 
 	glFlush();
