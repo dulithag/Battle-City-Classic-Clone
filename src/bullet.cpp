@@ -24,7 +24,9 @@ bool CBullet::IsOutOfBound(){
 }
 
 void CBullet::printGL(){
+	glDisable(GL_TEXTURE_2D);
 	glPointSize(5);
+	glColor4f(1,1,1,1);
 	glBegin(GL_POINTS);
 		glVertex3f(m_nX,m_nY,0);
 	glEnd();

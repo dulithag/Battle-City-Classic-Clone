@@ -17,9 +17,9 @@ class CGame{
 
 	//
 	public:
-	GLuint m_PlayerTexture;
+	//GLuint* m_Textures;
+	GLuint m_Textures[NUMTEXTURES];
 	vector<unsigned char> m_PlayerPixels;
-	GLuint m_BotTexture;
 	vector<unsigned char> m_BotPixels;
 
 	private:
@@ -80,29 +80,53 @@ class CGame{
 public:
 	CTank m_Player;	
 
-	CGame():m_Player(3,N/2,N/2,&m_BulletsPlayer,UP,m_PlayerTexture){
+	CGame(){
 
-		CTank enemy1(3,N/3,30,&m_BulletsEnemy);
-		CTank enemy2(3,N/2,30,&m_BulletsEnemy);
+		//m_Textures = new GLuint[NUMTEXTURES];
+
+		m_Player.set(3,N/2,N/2,&m_BulletsPlayer,&m_Textures[0],UP);
+		CTank enemy1(3,N/3,30,&m_BulletsEnemy,&m_Textures[1]);
+		CTank enemy2(3,N/2,30,&m_BulletsEnemy,&m_Textures[1]);
 		m_Enimies.push_back(enemy1);
 		m_Enimies.push_back(enemy2);
 		memset(map,0,sizeof(map));
 	}
 
+	void loadTexture(GLuint &texture, const char* filename, vector<unsigned char> &Pixels)
+	{
+		LoadBitmap(Pixels, filename);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 68, 68, 0, GL_RGBA, 
+											GL_UNSIGNED_BYTE,Pixels.data());	
+	}
+
 	void initGL(){
+		glGenTextures(NUMTEXTURES, m_Textures);
+		loadTexture(m_Textures[0], "src/tank.bmp", m_PlayerPixels);
+		loadTexture(m_Textures[1], "src/bot.bmp", m_BotPixels);
+
+	
 		//makeCheckImage();
+		/*
 		LoadBitmap(m_PlayerPixels, "src/tank.bmp");
+		LoadBitmap(m_BotPixels, "src/bot.bmp");
 
 		glGenTextures(1, &m_PlayerTexture);
 		glBindTexture(GL_TEXTURE_2D, m_PlayerTexture);
+		glGenTextures(2, &m_BotTexture);
+		glBindTexture(GL_TEXTURE_2D, m_BotTexture);
 
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 124, 124, 0, GL_RGBA, GL_UNSIGNED_BYTE,m_PlayerPixels.data());	
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 68, 68, 0, GL_RGBA, GL_UNSIGNED_BYTE,m_PlayerPixels.data());	
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 68, 68, 0, GL_RGBA, GL_UNSIGNED_BYTE,m_BotPixels.data());	
 		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageHeight , checkImageHeight , 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);	
+		*/
 	}
 	
 	void printGL(){
@@ -110,7 +134,9 @@ public:
 		list<CTank>::iterator itT;
 		list<CBullet>::iterator itB;
 		
+		cout<<"--HERE--"<<endl;
 		m_Player.printGL();	
+		cout<<"--HERE--"<<endl;
 
 		//Print enimies
 		for(itT=m_Enimies.begin(); itT!=m_Enimies.end(); itT++){
@@ -218,7 +244,7 @@ void init(){
 	glutInitWindowSize(N,N);
 	glutInitWindowPosition(0,0);
 	glutCreateWindow("Tank");
-	glClearColor(0.5f,0.5f,0.5f,0.0f);
+	glClearColor(0.0f,0.0f,0.0f,0.0f);
 	thegame.initGL();
 }
 
@@ -268,16 +294,17 @@ void display(){
  	glClear(GL_COLOR_BUFFER_BIT);
 	glEnable(GL_TEXTURE_2D);
 	cout<<"display function <--"<<endl;
-	//thegame.printBoard();
-	//thegame.printGL();
-glBindTexture( GL_TEXTURE_2D, thegame.m_PlayerTexture);
-glBegin( GL_QUADS );
-glTexCoord2d(0,0); glVertex2d(0,0);
-glTexCoord2d(1,0); glVertex2d(64,0);
-glTexCoord2d(1,1); glVertex2d(64,64);
-glTexCoord2d(0,1); glVertex2d(0,64);
-glEnd();
+	thegame.printGL();
 
+/*
+	glBindTexture( GL_TEXTURE_2D, thegame.m_PlayerTexture);
+	glBegin( GL_QUADS );
+	glTexCoord2d(0,0); glVertex2d(0,0);
+	glTexCoord2d(1,0); glVertex2d(64,0);
+	glTexCoord2d(1,1); glVertex2d(64,64);
+	glTexCoord2d(0,1); glVertex2d(0,64);
+	glEnd();
+*/
 
 	glFlush();
 	glutSwapBuffers();
