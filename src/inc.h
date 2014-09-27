@@ -13,10 +13,10 @@
 #ifndef _INC
 #define _INC
 #define N 500 
-#define PIXSIZE 30.0f
 #define TANKSIZE 30
-#define STEP 5
-#define UNIT 16
-#define NUMTEXTURES 2
+#define STEP 15
+#define UNIT 15 
+#define MAPSIZE 34
+#define NUMTEXTURES 3
 enum Direction {UP, DOWN, RIGHT, LEFT};
 #endif

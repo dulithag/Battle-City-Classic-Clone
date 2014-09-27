@@ -12,7 +12,7 @@ class CTank{
 	bool m_bFired;
 	unsigned int m_nTankSize;
 	GLuint* m_Texture;
-
+	unsigned int (*m_nMap)[MAPSIZE];
 public:
 	Direction m_FacingDirection;
 	list<CBullet> *m_bullets;
@@ -22,10 +22,10 @@ public:
 	unsigned int m_nY;
 
 	CTank();
-	CTank(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBullet> *bullet, 
-															GLuint *texture, Direction facing = DOWN);
+	CTank(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBullet> *Bullets, 
+								GLuint *texture, unsigned int map[][MAPSIZE], Direction dir = DOWN);
 	void set(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBullet> *Bullets, 
-															GLuint *texture, Direction direction = DOWN);
+								GLuint *texture, unsigned int map[][MAPSIZE],Direction dir= DOWN);
 	void move(Direction direction);
 	void fire();
 	bool hit(unsigned int X, unsigned int nY);

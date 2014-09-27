@@ -6,17 +6,20 @@ CTank::CTank(){
 }
 
 CTank::CTank(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBullet> *Bullets, 
-															GLuint *texture, Direction direction):
-	m_nHealth(nHealth),m_nX(nX),m_nY(nY){
-		m_FacingDirection = direction;
-		m_bullets = Bullets;	
-		m_bFired = false;
-		m_Texture = texture;
-		m_nTankSize = TANKSIZE;
+								GLuint *texture,  unsigned int map[][MAPSIZE], Direction direction){
+	m_nHealth = nHealth;
+	m_nX = nX;
+	m_nY = nY;
+	m_FacingDirection = direction;
+	m_bullets = Bullets;	
+	m_bFired = false;
+	m_Texture = texture;
+	m_nTankSize = TANKSIZE;
+	m_nMap = map;	
 }
 
 void CTank::set(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBullet> *Bullets, 
-															GLuint *texture, Direction direction)
+								GLuint *texture, unsigned int map[][MAPSIZE], Direction direction)
 {
 	m_nHealth = nHealth;
 	m_nX = nX;
@@ -25,6 +28,7 @@ void CTank::set(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBul
 	m_bullets = Bullets;	
 	m_bFired = false;
 	m_Texture = texture;
+	m_nMap = map;	
 }
 
 void CTank::move(Direction direction){
@@ -32,18 +36,71 @@ void CTank::move(Direction direction){
 	int nDirection = (direction == LEFT) || 
 							(direction == UP) ? -1 : 1;
 	int nStep = (nDirection*STEP);
+	int nxtStepX = m_nX + nStep;
+	int nxtStepY = m_nY + nStep;
+
+	unsigned int nTankSize = m_nTankSize - 1;	
+	int nxtmapX0 = (int)floor(nxtStepX/UNIT);
+	int nxtmapY0 = (int)floor(nxtStepY/UNIT);
+	int nxtmapX1 = (int)floor((nxtStepX+nTankSize)/UNIT);
+	int nxtmapY1 = (int)floor((nxtStepY+nTankSize)/UNIT);
+	int mapX0 = (int)floor(m_nX/UNIT);
+	int mapY0 = (int)floor(m_nY /UNIT);
+	int mapX1 = (int)floor((m_nX +nTankSize)/UNIT);
+	int mapY1 = (int)floor((m_nY +nTankSize)/UNIT);
+	int mapX2 = (int)floor((m_nX +nTankSize/2)/(UNIT));
+	int mapY2 = (int)floor((m_nY +nTankSize/2)/(UNIT));
+
+	switch(direction){
+		case UP:
+			if(nxtStepY>=0 && 
+				m_nMap[mapX0][nxtmapY0] == 0 &&
+				m_nMap[mapX2][nxtmapY0] == 0 &&
+				m_nMap[mapX1][nxtmapY0] == 0)
+					m_nY += nStep; 
+			break;
+		case DOWN:
+			if(nxtStepY<=N-m_nTankSize && 
+				m_nMap[mapX0][nxtmapY1] == 0 &&
+				m_nMap[mapX2][nxtmapY1] == 0 &&
+				m_nMap[mapX1][nxtmapY1] == 0)
+					m_nY += nStep; 
+			break;
+		case LEFT:	
+			if(nxtStepX>=0 && 
+				m_nMap[nxtmapX0][mapY0] == 0 &&
+				m_nMap[nxtmapX0][mapY2] == 0 &&
+				m_nMap[nxtmapX0][mapY1] == 0)
+					m_nX += nStep; 
+			break;
+		case RIGHT:
+			if(nxtStepX<=N-m_nTankSize && 
+				m_nMap[nxtmapX1][mapY0] == 0 && 
+				m_nMap[nxtmapX1][mapY2] == 0 && 
+				m_nMap[nxtmapX1][mapY1] == 0)
+					m_nX += nStep; 
+			break;
+			
+	}
+
+/*
 	//Y
 	if((direction == UP) || (direction == DOWN)){
-		if(m_nY+nStep>=0 && m_nY+nStep<=N-m_nTankSize){
+		int mapX = (int)floor(m_nX/UNIT);
+		int mapY = (int)floor((m_nY+nStep)/UNIT);
+		if(m_nY+nStep>=0 && m_nY+nStep<=N-m_nTankSize && 
+				m_nMap[mapX][mapY] == 0){
 			m_nY += nStep; 
 		}
 	}
 	//X
 	else{
-		if(m_nX+nStep>=0 && m_nX+nStep<=N-m_nTankSize){
+		if(m_nX+nStep>=0 && m_nX+nStep<=N-m_nTankSize && 
+				m_nMap[(int)floor((m_nX+nStep)/UNIT)][(int)floor(m_nY/UNIT)] == 0){
 			m_nX += nStep;
 		}
 	}
+*/
 	cout<<"Position: "<<m_nX<<" "<<m_nY<<endl;
 }
 
@@ -71,7 +128,6 @@ void CTank::printGL(){
 */
 
 	glEnable(GL_TEXTURE_2D);
-//	glColor4f(1,1,1,1);
 	glBindTexture( GL_TEXTURE_2D, *m_Texture);
 
 	/*
@@ -114,6 +170,8 @@ void CTank::printGL(){
 		glTexCoord2d(x3,y3); glVertex2d(m_nX,m_nY+m_nTankSize);
 	glEnd();
 
+	glColor4f(1,1,1,1);
+	glBindTexture(GL_TEXTURE_2D, 0);
 /*	
 	glBegin( GL_QUADS );
 		glTexCoord2d(0,0); glVertex2d(m_nX-nTankSize,m_nY-nTankSize);
