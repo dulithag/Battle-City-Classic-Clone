@@ -9,6 +9,7 @@
 #include <string.h>
 #include <fstream>
 #include <stdexcept>
+#include <deque>
 
 #ifndef _INC
 #define _INC
@@ -18,5 +19,5 @@
 #define UNIT 15 
 #define MAPSIZE 34
 #define NUMTEXTURES 3
-enum Direction {UP, DOWN, RIGHT, LEFT};
+enum Direction {UP, DOWN, RIGHT, LEFT, UNKNOWN};
 #endif

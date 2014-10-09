@@ -23,8 +23,8 @@ class CGame{
 	vector<unsigned char> m_BotPixels;
 	vector<unsigned char> m_BrickPixels;
 
+		
 	private:
-	list<CTank> m_Enimies;
 	list<CBullet> m_BulletsEnemy;
 	list<CBullet> m_BulletsPlayer;
 	unsigned int m_map[MAPSIZE][MAPSIZE]; //each 15 so 510
@@ -79,6 +79,7 @@ class CGame{
 	}
 
 public:
+	list<CBotTank> m_Enimies;
 	CTank m_Player;	
 
 	CGame(){
@@ -86,9 +87,9 @@ public:
 		//m_Textures = new GLuint[NUMTEXTURES];
 
 		m_Player.set(3,150,150,&m_BulletsPlayer,&m_Textures[0],m_map,UP);
-		CTank enemy1(3,150,30,&m_BulletsEnemy,&m_Textures[1],m_map);
-		CTank enemy2(3,300,30,&m_BulletsEnemy,&m_Textures[1],m_map);
-		CTank enemy3(3,30,30,&m_BulletsEnemy,&m_Textures[1],m_map);
+		CBotTank enemy1(3,150,30,&m_BulletsEnemy,&m_Textures[1],m_map);
+		CBotTank enemy2(3,300,30,&m_BulletsEnemy,&m_Textures[1],m_map);
+		CBotTank enemy3(3,30,30,&m_BulletsEnemy,&m_Textures[1],m_map);
 		m_Enimies.push_back(enemy1);
 		m_Enimies.push_back(enemy2);
 		m_Enimies.push_back(enemy3);
@@ -124,27 +125,6 @@ public:
 		loadTexture(m_Textures[0], "src/tank.bmp", m_PlayerPixels);
 		loadTexture(m_Textures[1], "src/bot.bmp", m_BotPixels);
 		loadTexture(m_Textures[2], "src/bricks.bmp", m_BrickPixels);
-
-	
-		//makeCheckImage();
-		/*
-		LoadBitmap(m_PlayerPixels, "src/tank.bmp");
-		LoadBitmap(m_BotPixels, "src/bot.bmp");
-
-		glGenTextures(1, &m_PlayerTexture);
-		glBindTexture(GL_TEXTURE_2D, m_PlayerTexture);
-		glGenTextures(2, &m_BotTexture);
-		glBindTexture(GL_TEXTURE_2D, m_BotTexture);
-
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 68, 68, 0, GL_RGBA, GL_UNSIGNED_BYTE,m_PlayerPixels.data());	
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 68, 68, 0, GL_RGBA, GL_UNSIGNED_BYTE,m_BotPixels.data());	
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageHeight , checkImageHeight , 0, GL_RGBA, GL_UNSIGNED_BYTE, checkImage);	
-		*/
 	}
 
 
@@ -176,7 +156,7 @@ public:
 	
 	void printGL(){
 		
-		list<CTank>::iterator itT;
+		list<CBotTank>::iterator itT;
 		list<CBullet>::iterator itB;
 		printMap();	
 		m_Player.printGL();	
@@ -258,7 +238,8 @@ public:
 
 	void timestep(){
 
-		list<CTank>::iterator itT;
+		list<CBotTank>::iterator itT;
+		list<CTank>::iterator itP;
 		list<CBullet>::iterator itB;
 
 		//Move All bullets a step
@@ -275,7 +256,10 @@ public:
 		//check for map interaction
 		checkMapInter(m_BulletsPlayer);
 		checkMapInter(m_BulletsEnemy);
-	
+
+		for(itT = m_Enimies.begin(); itT != m_Enimies.end(); itT++){
+			//itT->AutoMove(itT->getPosition(), m_Player.getPosition());
+		}
 		
 		//check for collision player bullet -> enemy
 		itB = m_BulletsPlayer.begin();
@@ -292,7 +276,9 @@ public:
 					m_Enimies.erase(itT++)	;
 					break;
 				}
-				itT++;
+				else{
+					itT++;
+				}
 			}
 			if(!bHit) itB++;
 		}
@@ -326,7 +312,7 @@ public:
 };
 CGame thegame;
 
-
+/*
 void makeCheckImage(void)
 {
    int i, j, c;
@@ -340,7 +326,7 @@ void makeCheckImage(void)
          checkImage[i][j][3] = (GLubyte) 255;
       }
    }
-}
+}*/
 
 
 //____________________________________________________
@@ -385,6 +371,12 @@ void keyboard(unsigned char k, int x, int y){
 			cout<<"Fire"<<endl;
 			thegame.m_Player.fire();
 			break;
+		case 't':
+			cout<<"TEST"<<endl;
+			int x = thegame.m_Player.m_nX/UNIT;
+			int y = thegame.m_Player.m_nY/UNIT;
+			thegame.m_Enimies.begin()->bfs(CPosition(1,0), CPosition(x,y));
+			break;
 	}
 	
 	glutPostRedisplay();
@@ -420,7 +412,7 @@ void display(){
 }
 
 void timerfunc(int t){
-	//cout<<"timer"<<endl;
+//	cout<<"timer"<<endl;
 	thegame.timestep();
 
 	glutPostRedisplay();
