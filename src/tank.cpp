@@ -10,6 +10,8 @@ CTank::CTank(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBullet
 	m_nHealth = nHealth;
 	m_nX = nX;
 	m_nY = nY;
+	m_nPreX = nX;
+	m_nPreY = nY;
 	m_FacingDirection = direction;
 	m_bullets = Bullets;	
 	m_bFired = false;
@@ -25,6 +27,8 @@ void CTank::set(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBul
 	m_nHealth = nHealth;
 	m_nX = nX;
 	m_nY = nY;
+	m_nPreX = nX;
+	m_nPreY = nY;
 	m_FacingDirection = direction;
 	m_bullets = Bullets;	
 	m_bFired = false;
@@ -32,11 +36,27 @@ void CTank::set(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBul
 	m_nMap = map;	
 }
 
+
+void CTank::moveStep(){
+	if(int(m_nX) - int(m_nPreX) > 0)	
+		m_nPreX += UNIT/TIMEDIVISOR;
+	if(int(m_nX) - int(m_nPreX) < 0){	
+		m_nPreX -= UNIT/TIMEDIVISOR;
+		cout<<"Moving"<<endl;
+	}
+	if(int(m_nY) - int(m_nPreY) > 0)	
+		m_nPreY += UNIT/TIMEDIVISOR;
+	if(int(m_nY) - int(m_nPreY) < 0)	
+		m_nPreY -= UNIT/TIMEDIVISOR;
+}
+
 void CTank::move(Direction direction){
 	m_FacingDirection = direction;
 	int nDirection = (direction == LEFT) || 
 							(direction == UP) ? -1 : 1;
 	int nStep = (nDirection*STEP);
+	m_nPreX = m_nX;
+	m_nPreY = m_nY;
 	int nxtStepX = m_nX + nStep;
 	int nxtStepY = m_nY + nStep;
 
@@ -103,7 +123,7 @@ void CTank::move(Direction direction){
 		}
 	}
 */
-	cout<<"Position: "<<m_nX<<" "<<m_nY<<endl;
+	debugP("Position: ");debugP(m_nX);debugP(",");debugPln(m_nY);
 }
 
 void CTank::fire(){
@@ -167,11 +187,19 @@ void CTank::printGL(){
 			break;
 	}
 
+/*
 	glBegin( GL_QUADS );
 		glTexCoord2d(x0,y0); glVertex2d(m_nX,m_nY);
 		glTexCoord2d(x1,y1); glVertex2d(m_nX+m_nTankSize,m_nY);
 		glTexCoord2d(x2,y2); glVertex2d(m_nX+m_nTankSize,m_nY+m_nTankSize);
 		glTexCoord2d(x3,y3); glVertex2d(m_nX,m_nY+m_nTankSize);
+	glEnd();
+*/
+	glBegin( GL_QUADS );
+		glTexCoord2d(x0,y0); glVertex2d(m_nPreX,m_nPreY);
+		glTexCoord2d(x1,y1); glVertex2d(m_nPreX+m_nTankSize,m_nPreY);
+		glTexCoord2d(x2,y2); glVertex2d(m_nPreX+m_nTankSize,m_nPreY+m_nTankSize);
+		glTexCoord2d(x3,y3); glVertex2d(m_nPreX,m_nPreY+m_nTankSize);
 	glEnd();
 
 	glColor4f(1,1,1,1);
@@ -303,6 +331,8 @@ SearchDone = false;	}
 					break;
 				case RIGHT:
 					nextNode.set(CheckNode.x+1,CheckNode.y);
+					break;
+				default:
 					break;
 
 			}			

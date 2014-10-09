@@ -5,8 +5,8 @@
 
 using namespace std;
 
-int timeperiod = 75;
-
+unsigned int timeperiod = 15;
+//CDebug debug;
 //Image Dependent
 
 #define checkImageWidth 64
@@ -28,6 +28,8 @@ class CGame{
 	list<CBullet> m_BulletsEnemy;
 	list<CBullet> m_BulletsPlayer;
 	unsigned int m_map[MAPSIZE][MAPSIZE]; //each 15 so 510
+	unsigned short m_nTimeCounter;	
+
 
 	//Load a bitmap using function from stackoverflow
 	void LoadBitmap(vector<unsigned char> &Pixels, const char* FilePath){
@@ -77,15 +79,112 @@ class CGame{
 				itB++;
 		}
 	}
+	
+	void GameStep(){
+
+		list<CBotTank>::iterator itT;
+		list<CTank>::iterator itP;
+		list<CBullet>::iterator itB;
+
+		//Move Player
+		switch(m_MovePlayer){
+			case UP:
+				m_Player.move(UP);
+				m_MovePlayer = UNKNOWN;
+				break;
+			case DOWN:
+				m_Player.move(DOWN);
+				m_MovePlayer = UNKNOWN;
+				break;
+			case RIGHT:
+				m_Player.move(RIGHT);
+				m_MovePlayer = UNKNOWN;
+				break;
+			case LEFT:
+				m_Player.move(LEFT);
+				m_MovePlayer = UNKNOWN;
+				break;
+			default:
+				break;	
+		}
+
+		//Move enemy
+		for(itT = m_Enimies.begin(); itT != m_Enimies.end(); itT++){
+			itT->AutoMove(itT->getPosition(), m_Player.getPosition());
+		}
+
+		//Move All bullets a step
+		for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++){
+			itB->propogate();
+		}
+		for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++)
+				itB->propogate();
+
+		//Check for out of bound	
+		checkOutOfBound(&m_BulletsEnemy);
+		checkOutOfBound(&m_BulletsPlayer);
+		
+		//check for map interaction
+		checkMapInter(m_BulletsPlayer);
+		checkMapInter(m_BulletsEnemy);
+
+		
+		//check for collision player bullet -> enemy
+		itB = m_BulletsPlayer.begin();
+		bool bHit = false;
+		while(itB!= m_BulletsPlayer.end()){
+			itT= m_Enimies.begin();
+			while(itT!= m_Enimies.end()){
+				bHit = false;	
+				if(itT->hit(itB->m_nX, itB->m_nY)){
+					itB->m_ptank->bulletHit();	
+					debugPln("HIT Bot");
+					bHit = true;
+					m_BulletsPlayer.erase(itB++)	;
+					m_Enimies.erase(itT++)	;
+					break;
+				}
+				else{
+					itT++;
+				}
+			}
+			if(!bHit) itB++;
+		}
+
+		//check for collision enemy bullet -> player 
+		itB = m_BulletsEnemy.begin();
+		bHit = false;
+		while(itB!= m_BulletsEnemy.end()){
+			if(m_Player.hit(itB->m_nX, itB->m_nY)){
+					debugPln("HIT Player");
+					itB->m_ptank->bulletHit();
+					m_BulletsEnemy.erase(itB++)	;
+					--m_Player.m_nHealth;
+					if(!m_Player.m_nHealth){
+						bHit = true;
+						debugPln("GAME OVER");
+						break;
+					}
+			}
+			itB++;
+		}	
+
+	
+		//Enemy fires after each
+		for(itT= m_Enimies.begin(); itT!= m_Enimies.end(); itT++){
+			itT->fire();
+		}
+
+	}
 
 public:
 	list<CBotTank> m_Enimies;
 	CTank m_Player;	
-
+	Direction m_MovePlayer;
 	CGame(){
-
+		debugPln("------------------DEBUG ON-----------------");
 		//m_Textures = new GLuint[NUMTEXTURES];
-
+		m_nTimeCounter = 0;
 		m_Player.set(3,150,150,&m_BulletsPlayer,&m_Textures[0],m_map,UP);
 		CBotTank enemy1(3,150,30,&m_BulletsEnemy,&m_Textures[1],m_map);
 		CBotTank enemy2(3,300,30,&m_BulletsEnemy,&m_Textures[1],m_map);
@@ -158,8 +257,13 @@ public:
 		
 		list<CBotTank>::iterator itT;
 		list<CBullet>::iterator itB;
+		
+		//Print Map
 		printMap();	
+
+		//Print Player
 		m_Player.printGL();	
+
 		//Print enimies
 		for(itT=m_Enimies.begin(); itT!=m_Enimies.end(); itT++){
 			itT->printGL();
@@ -203,6 +307,8 @@ public:
 					if(m_map[mapx1][mapy0] == 1){ m_map[mapx1][mapy0] = 0; bhit = true;}
 					if(m_map[mapx1][mapy1] == 1){ m_map[mapx1][mapy1] = 0; bhit = true;}
 					break;
+				default:
+					break;
 			}
 			if(bhit){
 				itB->m_ptank->bulletHit();		
@@ -213,100 +319,27 @@ public:
 			}
 			
 		}
-/*
-			if(m_map[mapx0][mapy0] == 1){
-				if(itB->m_travelingDirection==DOWN 
-						|| itB->m_travelingDirection==UP){
-					m_map[mapx-1][mapy] = 0;
-				}
-				if(itB->m_travelingDirection==RIGHT || 
-						itB->m_travelingDirection==LEFT){
-					m_map[mapx][mapy-1] = 0;
-				}
-				m_map[mapx][mapy] = 0;
-				itB->m_ptank->bulletHit();		
-				vec.erase(itB++);
-			}
-			else{
-				itB++;
-			}
-		}
-*/
 	}
 
 
 
-	void timestep(){
-
+	void InterpolateStep(){
+		m_Player.moveStep();
 		list<CBotTank>::iterator itT;
-		list<CTank>::iterator itP;
-		list<CBullet>::iterator itB;
-
-		//Move All bullets a step
-		for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++){
-			itB->propogate();
-		}
-		for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++)
-				itB->propogate();
-
-		//Check for out of bound	
-		checkOutOfBound(&m_BulletsEnemy);
-		checkOutOfBound(&m_BulletsPlayer);
-		
-		//check for map interaction
-		checkMapInter(m_BulletsPlayer);
-		checkMapInter(m_BulletsEnemy);
-
 		for(itT = m_Enimies.begin(); itT != m_Enimies.end(); itT++){
-			//itT->AutoMove(itT->getPosition(), m_Player.getPosition());
+			itT->moveStep();
 		}
-		
-		//check for collision player bullet -> enemy
-		itB = m_BulletsPlayer.begin();
-		bool bHit = false;
-		while(itB!= m_BulletsPlayer.end()){
-			itT= m_Enimies.begin();
-			while(itT!= m_Enimies.end()){
-				bHit = false;	
-				if(itT->hit(itB->m_nX, itB->m_nY)){
-					itB->m_ptank->bulletHit();	
-					cout<<"---HIT---"<<endl;
-					bHit = true;
-					m_BulletsPlayer.erase(itB++)	;
-					m_Enimies.erase(itT++)	;
-					break;
-				}
-				else{
-					itT++;
-				}
-			}
-			if(!bHit) itB++;
+	}
+
+	void timeStep(){
+
+		InterpolateStep();
+		//cout<<"Time Inter :"<<m_nTimeCounter<<endl;
+		if(m_nTimeCounter++ >= TIMEDIVISOR){
+			//cout<<"Time Game:"<<endl;
+			GameStep();
+			m_nTimeCounter = 0;
 		}
-
-		//check for collision enemy bullet -> player 
-		itB = m_BulletsEnemy.begin();
-		bHit = false;
-		while(itB!= m_BulletsEnemy.end()){
-			if(m_Player.hit(itB->m_nX, itB->m_nY)){
-					cout<<"HIT"<<endl;
-					itB->m_ptank->bulletHit();
-					m_BulletsEnemy.erase(itB++)	;
-					--m_Player.m_nHealth;
-					if(!m_Player.m_nHealth){
-						bHit = true;
-						cout<<"GAME OVER"<<endl;	
-						break;
-					}
-			}
-			itB++;
-		}	
-
-	
-		//Enemy fires after each
-		for(itT= m_Enimies.begin(); itT!= m_Enimies.end(); itT++){
-			itT->fire();
-		}
-
 	}
 
 };
@@ -344,31 +377,35 @@ void init(){
 }
 
 void keyboard(unsigned char k, int x, int y){
-	cout<<endl;
+	//cout<<endl;
 
 	switch(k){
 		case 'w':
 			//cout<<"up"<<endl;
-			thegame.m_Player.move(UP);
+			//thegame.m_Player.move(UP);
+			thegame.m_MovePlayer = UP;
 			break;
 		case 's':
 			//cout<<"down"<<endl;
-			thegame.m_Player.move(DOWN);
+			//thegame.m_Player.move(DOWN);
+			thegame.m_MovePlayer = DOWN;
 			break;
 		case 'd':
 			//cout<<"right"<<endl;
-			thegame.m_Player.move(RIGHT);
+			//thegame.m_Player.move(RIGHT);
+			thegame.m_MovePlayer = RIGHT;
 			break;
 		case 'a':
 			//cout<<"left"<<endl;
-			thegame.m_Player.move(LEFT);
+			//thegame.m_Player.move(LEFT);
+			thegame.m_MovePlayer = LEFT;
 			break;
 		case 'q':
 			cout<<"exit"<<endl;
 			exit(EXIT_FAILURE);
 			break;
 		case 'j':
-			cout<<"Fire"<<endl;
+			//cout<<"Fire"<<endl;
 			thegame.m_Player.fire();
 			break;
 		case 't':
@@ -379,7 +416,7 @@ void keyboard(unsigned char k, int x, int y){
 			break;
 	}
 	
-	glutPostRedisplay();
+	//glutPostRedisplay();
 	
 }
 
@@ -413,7 +450,7 @@ void display(){
 
 void timerfunc(int t){
 //	cout<<"timer"<<endl;
-	thegame.timestep();
+	thegame.timeStep();
 
 	glutPostRedisplay();
 	glutTimerFunc(t,timerfunc,timeperiod);

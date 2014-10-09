@@ -10,6 +10,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <deque>
+//#include "debug.h"
 
 #ifndef _INC
 #define _INC
@@ -19,5 +20,18 @@
 #define UNIT 15 
 #define MAPSIZE 34
 #define NUMTEXTURES 3
+#define TIMEDIVISOR 5
 enum Direction {UP, DOWN, RIGHT, LEFT, UNKNOWN};
+
+//#define DEBUG
+
+#ifdef DEBUG
+#define debugP(s) std::cout<<s
+#define debugPln(s) std::cout<<s<<endl
+#else
+#define debugP(s) 
+#define debugPln(s) 
+#endif
+
+
 #endif
