@@ -25,6 +25,8 @@ enum Direction {UP, DOWN, RIGHT, LEFT, UNKNOWN};
 
 //#define DEBUG
 
+#include "debug.h"
+
 #ifdef DEBUG
 #define debugP(s) std::cout<<s
 #define debugPln(s) std::cout<<s<<endl

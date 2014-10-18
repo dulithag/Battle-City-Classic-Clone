@@ -2,11 +2,10 @@
 #include "tank.h"
 #include "bullet.h"
 #include <stdint.h>
-
 using namespace std;
 
 unsigned int timeperiod = 15;
-//CDebug debug;
+CDebug debug;
 //Image Dependent
 
 #define checkImageWidth 64
@@ -85,7 +84,7 @@ class CGame{
 		list<CBotTank>::iterator itT;
 		list<CTank>::iterator itP;
 		list<CBullet>::iterator itB;
-
+		debug<<"hello";
 		//Move Player
 		switch(m_MovePlayer){
 			case UP:
@@ -110,7 +109,7 @@ class CGame{
 
 		//Move enemy
 		for(itT = m_Enimies.begin(); itT != m_Enimies.end(); itT++){
-			itT->AutoMove(itT->getPosition(), m_Player.getPosition());
+//			itT->AutoMove(itT->getPosition(), m_Player.getPosition());
 		}
 
 		//Move All bullets a step
@@ -182,7 +181,7 @@ public:
 	CTank m_Player;	
 	Direction m_MovePlayer;
 	CGame(){
-		debugPln("------------------DEBUG ON-----------------");
+		debug<<"------------------DEBUG ON-----------------";
 		//m_Textures = new GLuint[NUMTEXTURES];
 		m_nTimeCounter = 0;
 		m_Player.set(3,150,150,&m_BulletsPlayer,&m_Textures[0],m_map,UP);
@@ -326,9 +325,19 @@ public:
 	void InterpolateStep(){
 		m_Player.moveStep();
 		list<CBotTank>::iterator itT;
+		list<CBullet>::iterator itB;
+
 		for(itT = m_Enimies.begin(); itT != m_Enimies.end(); itT++){
 			itT->moveStep();
 		}
+	
+		for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++){
+			itB->propogateStep();
+		}
+		for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++)
+				itB->propogateStep();
+
+
 	}
 
 	void timeStep(){

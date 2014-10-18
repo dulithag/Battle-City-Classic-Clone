@@ -42,7 +42,6 @@ void CTank::moveStep(){
 		m_nPreX += UNIT/TIMEDIVISOR;
 	if(int(m_nX) - int(m_nPreX) < 0){	
 		m_nPreX -= UNIT/TIMEDIVISOR;
-		cout<<"Moving"<<endl;
 	}
 	if(int(m_nY) - int(m_nPreY) > 0)	
 		m_nPreY += UNIT/TIMEDIVISOR;
