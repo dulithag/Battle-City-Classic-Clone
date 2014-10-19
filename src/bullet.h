@@ -20,7 +20,7 @@ public:
 	
 	CBullet(unsigned int nX, unsigned int nY, Direction dir, CTank* tank );
 		
-	void propogate();
+	void propogate(bool skip = false);
 	void propogateStep();
 	void printGL();
 	bool IsOutOfBound();

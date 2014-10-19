@@ -20,7 +20,8 @@
 #define UNIT 15 
 #define MAPSIZE 34
 #define NUMTEXTURES 3
-#define TIMEDIVISOR 5
+#define TIMEDIVISOR 5 
+#define BULLETSTEPS 2
 enum Direction {UP, DOWN, RIGHT, LEFT, UNKNOWN};
 
 //#define DEBUG

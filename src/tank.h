@@ -86,6 +86,10 @@ public:
 class CBotTank : public CTank {
 	
 public:
+
+	Direction m_MovingDirection ;
+	unsigned int m_nTravelDistance;
+
 	bool SearchDone;
 	vector<CPosition> path; 
 	int pathPos;
@@ -94,12 +98,14 @@ public:
 	CBotTank();
 	CBotTank(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBullet> *Bullets, 
 								GLuint *texture, unsigned int map[][MAPSIZE], Direction dir = DOWN);
-	bool inSearchSpace(CPosition pos, CPosition* nodefound = NULL);
+
+	bool inSearchSpace(deque<CPosition> &searchSpace, CPosition pos, CPosition* nodefound = NULL);
+	void getNeighbours(deque<CPosition> &searchSpace, deque<CPosition> &list, CPosition P);
 	void AutoMove(CPosition start,CPosition goal);
 	
-	void bfs(CPosition start,CPosition goal);
+	void MoveBot_bfs(CPosition goal);
+	void FindPath_bfs(CPosition start,CPosition goal);
 	void PathToGoal(CPosition start,CPosition goal);
-	void getNeighbours(deque<CPosition> &list, CPosition P);
 };
 
 #endif

@@ -4,7 +4,7 @@
 #include <stdint.h>
 using namespace std;
 
-unsigned int timeperiod = 15;
+unsigned int timeperiod = 25;
 CDebug debug;
 //Image Dependent
 
@@ -109,70 +109,75 @@ class CGame{
 
 		//Move enemy
 		for(itT = m_Enimies.begin(); itT != m_Enimies.end(); itT++){
-//			itT->AutoMove(itT->getPosition(), m_Player.getPosition());
+			itT->AutoMove(itT->getPosition(), m_Player.getPosition());
 		}
 
-		//Move All bullets a step
-		for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++){
-			itB->propogate();
-		}
-		for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++)
-				itB->propogate();
-
-		//Check for out of bound	
-		checkOutOfBound(&m_BulletsEnemy);
-		checkOutOfBound(&m_BulletsPlayer);
-		
-		//check for map interaction
-		checkMapInter(m_BulletsPlayer);
-		checkMapInter(m_BulletsEnemy);
-
-		
-		//check for collision player bullet -> enemy
-		itB = m_BulletsPlayer.begin();
-		bool bHit = false;
-		while(itB!= m_BulletsPlayer.end()){
-			itT= m_Enimies.begin();
-			while(itT!= m_Enimies.end()){
-				bHit = false;	
-				if(itT->hit(itB->m_nX, itB->m_nY)){
-					itB->m_ptank->bulletHit();	
-					debugPln("HIT Bot");
-					bHit = true;
-					m_BulletsPlayer.erase(itB++)	;
-					m_Enimies.erase(itT++)	;
-					break;
-				}
-				else{
-					itT++;
-				}
-			}
-			if(!bHit) itB++;
-		}
-
-		//check for collision enemy bullet -> player 
-		itB = m_BulletsEnemy.begin();
-		bHit = false;
-		while(itB!= m_BulletsEnemy.end()){
-			if(m_Player.hit(itB->m_nX, itB->m_nY)){
-					debugPln("HIT Player");
-					itB->m_ptank->bulletHit();
-					m_BulletsEnemy.erase(itB++)	;
-					--m_Player.m_nHealth;
-					if(!m_Player.m_nHealth){
-						bHit = true;
-						debugPln("GAME OVER");
-						break;
-					}
-			}
-			itB++;
-		}	
-
-	
 		//Enemy fires after each
 		for(itT= m_Enimies.begin(); itT!= m_Enimies.end(); itT++){
 			itT->fire();
 		}
+
+		bool skip = false;
+		for(int i=0; i<BULLETSTEPS; i++){
+
+			//Move All bullets a step
+			for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++){
+				itB->propogate(skip);
+			}
+			for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++)
+					itB->propogate(skip);
+
+			//Check for out of bound	
+			checkOutOfBound(&m_BulletsEnemy);
+			checkOutOfBound(&m_BulletsPlayer);
+			
+			//check for map interaction
+			checkMapInter(m_BulletsPlayer);
+			checkMapInter(m_BulletsEnemy);
+
+			
+			//check for collision player bullet -> enemy
+			itB = m_BulletsPlayer.begin();
+			bool bHit = false;
+			while(itB!= m_BulletsPlayer.end()){
+				itT= m_Enimies.begin();
+				while(itT!= m_Enimies.end()){
+					bHit = false;	
+					if(itT->hit(itB->m_nX, itB->m_nY)){
+						itB->m_ptank->bulletHit();	
+						debugPln("HIT Bot");
+						bHit = true;
+						m_BulletsPlayer.erase(itB++)	;
+						m_Enimies.erase(itT++)	;
+						break;
+					}
+					else{
+						itT++;
+					}
+				}
+				if(!bHit) itB++;
+			}
+
+			//check for collision enemy bullet -> player 
+			itB = m_BulletsEnemy.begin();
+			bHit = false;
+			while(itB!= m_BulletsEnemy.end()){
+				if(m_Player.hit(itB->m_nX, itB->m_nY)){
+						debugPln("HIT Player");
+						itB->m_ptank->bulletHit();
+						m_BulletsEnemy.erase(itB++)	;
+						--m_Player.m_nHealth;
+						if(!m_Player.m_nHealth){
+							bHit = true;
+							debugPln("GAME OVER");
+							break;
+						}
+				}
+				itB++;
+			}	
+			if(!skip) {skip=true;}
+		}
+	
 
 	}
 
@@ -196,6 +201,7 @@ public:
 
 		//map is 500/15 = about 34
 		//
+		
 		for(int i=15; i<30; i++){
 			for(int j=15; j<30; j++){
 				m_map[i][j] = 1;
@@ -206,6 +212,7 @@ public:
 		m_map[11][14] = 1;
 		m_map[10][20] = 1;
 		m_map[33][33] = 1;
+	
 	}
 
 	void loadTexture(GLuint &texture, const char* filename, vector<unsigned char> &Pixels)
@@ -334,21 +341,21 @@ public:
 		for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++){
 			itB->propogateStep();
 		}
-		for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++)
-				itB->propogateStep();
-
+		for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++){
+			itB->propogateStep();
+		}
 
 	}
 
 	void timeStep(){
 
-		InterpolateStep();
 		//cout<<"Time Inter :"<<m_nTimeCounter<<endl;
 		if(m_nTimeCounter++ >= TIMEDIVISOR){
 			//cout<<"Time Game:"<<endl;
 			GameStep();
 			m_nTimeCounter = 0;
 		}
+		InterpolateStep();
 	}
 
 };
@@ -418,10 +425,8 @@ void keyboard(unsigned char k, int x, int y){
 			thegame.m_Player.fire();
 			break;
 		case 't':
-			cout<<"TEST"<<endl;
-			int x = thegame.m_Player.m_nX/UNIT;
-			int y = thegame.m_Player.m_nY/UNIT;
-			thegame.m_Enimies.begin()->bfs(CPosition(1,0), CPosition(x,y));
+			//cout<<"Fire"<<endl;
+			//thegame.m_Enimies[0].getNeighbours(;
 			break;
 	}
 	
