@@ -27,7 +27,8 @@ class CGame{
 	list<CBullet> m_BulletsEnemy;
 	list<CBullet> m_BulletsPlayer;
 	unsigned int m_map[MAPSIZE][MAPSIZE]; //each 15 so 510
-	unsigned short m_nTimeCounter;	
+	unsigned short m_nTimeTankStepCounter ;	
+	unsigned short m_nTimeBulletStepCounter ;	
 
 
 	//Load a bitmap using function from stackoverflow
@@ -78,12 +79,128 @@ class CGame{
 				itB++;
 		}
 	}
+
+	void timeStep_InterpolateStep(){
+		m_Player.moveStep();
+		list<CBotTank>::iterator itT;
+		list<CBullet>::iterator itB;
+
+		for(itT = m_Enimies.begin(); itT != m_Enimies.end(); itT++){
+			itT->moveStep();
+		}
 	
-	void GameStep(){
+		for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++){
+			itB->propogateStep();
+		}
+
+		for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++){
+			itB->propogateStep();
+		}
+
+	}
+
+	void timeStep_BulletStep(){
 
 		list<CBotTank>::iterator itT;
 		list<CTank>::iterator itP;
 		list<CBullet>::iterator itB;
+		list<CBullet>::iterator itB2;
+		bool skip = false;
+
+		//for(int i=0; i<BULLETSTEPS; i++){
+
+		//Check for out of bound	
+		checkOutOfBound(&m_BulletsEnemy);
+		checkOutOfBound(&m_BulletsPlayer);
+			
+		//check for map interaction
+		checkMapInter(m_BulletsPlayer);
+		checkMapInter(m_BulletsEnemy);
+
+			
+		//check for collision player bullet -> enemy
+		itB = m_BulletsPlayer.begin();
+		bool bHit = false;
+		while(itB!= m_BulletsPlayer.end()){
+			itT= m_Enimies.begin();
+			while(itT!= m_Enimies.end()){
+				bHit = false;	
+				if(itT->hit(itB->m_nX, itB->m_nY)){
+					itB->m_ptank->bulletHit();	
+					debugPln("HIT Bot");
+					bHit = true;
+					m_BulletsPlayer.erase(itB++)	;
+					m_Enimies.erase(itT++)	;
+					break;
+				}
+				else{
+					itT++;
+				}
+			}
+			if(!bHit) itB++;
+		}
+
+		//check for collision enemy bullet -> player 
+		itB = m_BulletsEnemy.begin();
+		bHit = false;
+		while(itB!= m_BulletsEnemy.end()){
+			if(m_Player.hit(itB->m_nX, itB->m_nY)){
+					debugPln("HIT Player");
+					itB->m_ptank->bulletHit();
+					m_BulletsEnemy.erase(itB++)	;
+					--m_Player.m_nHealth;
+					if(!m_Player.m_nHealth){
+						bHit = true;
+						debugPln("GAME OVER");
+						break;
+					}
+			}
+			itB++;
+		}	
+
+		//Move All bullets a step
+		for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++){
+			itB->propogate(skip);
+		}
+		for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++)
+			itB->propogate(skip);
+
+/*
+		//check for bullet collision
+		itB = m_BulletsEnemy.begin();
+		itB2 = m_BulletsPlayer.begin();
+		while(itB2 != m_BulletsPlayer.end()){
+			bHit=false;
+			int i=0;
+			while(itB!=m_BulletsEnemy.end()){
+			cout<<"-----------CHECK-----------"<<i++<<endl;
+				if(itB->m_nX == itB2->m_nX && itB->m_nY == itB2->m_nY){
+					cout<<"-----------BULLET COLLIDE-----------"<<endl;
+					m_BulletsEnemy.erase(itB++);
+					m_BulletsPlayer.erase(itB2++);
+					itB->m_ptank->bulletHit();	
+					itB2->m_ptank->bulletHit();
+					bHit = true;
+					break;
+				}
+				else{
+					itB++;	
+				}
+			}
+			if(!bHit) itB2++;	
+		}
+*/
+	
+		//if(!skip) {skip=true;}
+	//}
+	}
+	
+	void timeStep_TankStep(){
+
+		list<CBotTank>::iterator itT;
+		list<CTank>::iterator itP;
+		list<CBullet>::iterator itB;
+		list<CBullet>::iterator itB2;
 		debug<<"hello";
 		//Move Player
 		switch(m_MovePlayer){
@@ -117,67 +234,7 @@ class CGame{
 			itT->fire();
 		}
 
-		bool skip = false;
-		for(int i=0; i<BULLETSTEPS; i++){
-
-			//Move All bullets a step
-			for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++){
-				itB->propogate(skip);
-			}
-			for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++)
-					itB->propogate(skip);
-
-			//Check for out of bound	
-			checkOutOfBound(&m_BulletsEnemy);
-			checkOutOfBound(&m_BulletsPlayer);
-			
-			//check for map interaction
-			checkMapInter(m_BulletsPlayer);
-			checkMapInter(m_BulletsEnemy);
-
-			
-			//check for collision player bullet -> enemy
-			itB = m_BulletsPlayer.begin();
-			bool bHit = false;
-			while(itB!= m_BulletsPlayer.end()){
-				itT= m_Enimies.begin();
-				while(itT!= m_Enimies.end()){
-					bHit = false;	
-					if(itT->hit(itB->m_nX, itB->m_nY)){
-						itB->m_ptank->bulletHit();	
-						debugPln("HIT Bot");
-						bHit = true;
-						m_BulletsPlayer.erase(itB++)	;
-						m_Enimies.erase(itT++)	;
-						break;
-					}
-					else{
-						itT++;
-					}
-				}
-				if(!bHit) itB++;
-			}
-
-			//check for collision enemy bullet -> player 
-			itB = m_BulletsEnemy.begin();
-			bHit = false;
-			while(itB!= m_BulletsEnemy.end()){
-				if(m_Player.hit(itB->m_nX, itB->m_nY)){
-						debugPln("HIT Player");
-						itB->m_ptank->bulletHit();
-						m_BulletsEnemy.erase(itB++)	;
-						--m_Player.m_nHealth;
-						if(!m_Player.m_nHealth){
-							bHit = true;
-							debugPln("GAME OVER");
-							break;
-						}
-				}
-				itB++;
-			}	
-			if(!skip) {skip=true;}
-		}
-	
+		//tank to tank collision
 
 	}
 
@@ -188,7 +245,8 @@ public:
 	CGame(){
 		debug<<"------------------DEBUG ON-----------------";
 		//m_Textures = new GLuint[NUMTEXTURES];
-		m_nTimeCounter = 0;
+		m_nTimeTankStepCounter  = 0;
+		m_nTimeBulletStepCounter  = 0;
 		m_Player.set(3,150,150,&m_BulletsPlayer,&m_Textures[0],m_map,UP);
 		CBotTank enemy1(3,150,30,&m_BulletsEnemy,&m_Textures[1],m_map);
 		CBotTank enemy2(3,300,30,&m_BulletsEnemy,&m_Textures[1],m_map);
@@ -328,34 +386,19 @@ public:
 	}
 
 
-
-	void InterpolateStep(){
-		m_Player.moveStep();
-		list<CBotTank>::iterator itT;
-		list<CBullet>::iterator itB;
-
-		for(itT = m_Enimies.begin(); itT != m_Enimies.end(); itT++){
-			itT->moveStep();
-		}
-	
-		for(itB=m_BulletsPlayer.begin(); itB!=m_BulletsPlayer.end();itB++){
-			itB->propogateStep();
-		}
-		for(itB=m_BulletsEnemy.begin(); itB!=m_BulletsEnemy.end(); itB++){
-			itB->propogateStep();
-		}
-
-	}
-
 	void timeStep(){
 
-		//cout<<"Time Inter :"<<m_nTimeCounter<<endl;
-		if(m_nTimeCounter++ >= TIMEDIVISOR){
+		if(m_nTimeTankStepCounter++  >= TIMER_TANKSTEP){
 			//cout<<"Time Game:"<<endl;
-			GameStep();
-			m_nTimeCounter = 0;
+			timeStep_TankStep();
+			m_nTimeTankStepCounter = 0;
 		}
-		InterpolateStep();
+		if(m_nTimeBulletStepCounter++ >= TIMER_BULLETSTEP){
+			timeStep_BulletStep();
+			m_nTimeBulletStepCounter = 0;
+		}	
+
+		timeStep_InterpolateStep();
 	}
 
 };
@@ -387,8 +430,8 @@ void init(){
 	glutInitWindowSize(N,N);
 	glutInitWindowPosition(0,0);
 	glutCreateWindow("Tank");
-	//glClearColor(0.0f,0.0f,0.0f,0.0f);
-	glClearColor(0.5f,0.5f,0.5f,0.0f);
+	glClearColor(0.0f,0.0f,0.0f,0.0f);
+	//glClearColor(0.5f,0.5f,0.5f,0.0f);
 	thegame.initGL();
 }
 

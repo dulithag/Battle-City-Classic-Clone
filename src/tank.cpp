@@ -39,14 +39,14 @@ void CTank::set(unsigned int nHealth,unsigned int nX, unsigned int nY, list<CBul
 
 void CTank::moveStep(){
 	if(int(m_nX) - int(m_nPreX) > 0)	
-		m_nPreX += UNIT/TIMEDIVISOR;
+		m_nPreX += UNIT/TIMER_TANKSTEP ;
 	if(int(m_nX) - int(m_nPreX) < 0){	
-		m_nPreX -= UNIT/TIMEDIVISOR;
+		m_nPreX -= UNIT/TIMER_TANKSTEP ;
 	}
 	if(int(m_nY) - int(m_nPreY) > 0)	
-		m_nPreY += UNIT/TIMEDIVISOR;
+		m_nPreY += UNIT/TIMER_TANKSTEP ;
 	if(int(m_nY) - int(m_nPreY) < 0)	
-		m_nPreY -= UNIT/TIMEDIVISOR;
+		m_nPreY -= UNIT/TIMER_TANKSTEP ;
 }
 
 void CTank::move(Direction direction){

@@ -9,28 +9,27 @@ CBullet::CBullet(unsigned int nX, unsigned int nY, Direction dir, CTank* t){
 }
 
 void CBullet::propogateStep(){
+
 	if(int(m_nX) - int(m_nPreX) > 0){
-		m_nPreX += (BULLETSTEPS* UNIT)/TIMEDIVISOR;
+		m_nPreX += UNIT/TIMER_BULLETSTEP ;
 	}
 	if(int(m_nX) - int(m_nPreX) < 0){
-		m_nPreX -= (BULLETSTEPS*UNIT)/TIMEDIVISOR;
+		m_nPreX -= UNIT/TIMER_BULLETSTEP ;
 	}
 	if(int(m_nY) - int(m_nPreY) > 0){
-		m_nPreY += (BULLETSTEPS*UNIT)/TIMEDIVISOR;
+		m_nPreY += UNIT/TIMER_BULLETSTEP ;
 	}
 	if(int(m_nY) - int(m_nPreY) < 0){
-		m_nPreY -= (BULLETSTEPS*UNIT)/TIMEDIVISOR;
+		m_nPreY -= UNIT/TIMER_BULLETSTEP ;
 	}
-
 }
 	
 void CBullet::propogate(bool skip){
 	int nDirection = (m_travelingDirection == LEFT) || 
 							(m_travelingDirection == UP) ? -1 : 1;
-	if(!skip){
-		m_nPreX = m_nX;
-		m_nPreY = m_nY;
-	}
+	m_nPreX = m_nX;
+	m_nPreY = m_nY;
+
 	int nStep = nDirection * STEP;
 	if((m_travelingDirection == UP) || (m_travelingDirection == DOWN))
 			m_nY += nStep;
